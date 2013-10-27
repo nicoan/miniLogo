@@ -1,0 +1,59 @@
+canvasSize 1000 1000
+backcolor 0
+
+to spin 
+    repeat 15 [
+        fd 100 
+        bk 100 
+        rt 5
+    ]
+end
+
+to spin2 
+    repeat 15 [
+        fd 100 
+        bk 95 
+        rt 10
+    ]
+end 
+
+to spin3 
+    repeat 25 [
+        fd 100 
+        bk 100 
+        rt 15
+    ]
+end
+
+
+
+pu setxy 450 250 pd
+setpc 12
+
+repeat 25 [
+    call spin 
+    fd 100
+]
+
+
+
+pu setxy 550 580 pd
+setpc 13
+
+repeat 12 [
+    call spin2
+    fd 100
+]
+
+pu setxy 450 100 pd
+setpc 14
+
+repeat 24 [
+    call spin3
+    fd 100
+]
+
+/*
+
+pu setpos [-400 0] pd
+define "spin [[ ][repeat 25 [fd 100 bk 100 rt 15]]] repeat 24 [spin fd 100]*/

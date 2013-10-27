@@ -1,0 +1,79 @@
+canvasSize 1450 1000
+backcolor 0
+
+
+pu setxy 250 250 pd
+setpc 1
+
+for [i 100 30 -50] [
+    repeat 6 [
+        repeat 6 [
+            fd :i lt 60
+        ] 
+    lt 60
+    ]
+]
+
+
+pu setxy 700 250 pd
+setpc 2
+
+for [size 20 140 30] [
+    repeat 6 [
+        repeat 6 [
+            fd :size 
+            rt 60
+        ] 
+    rt 60
+    ]
+]
+
+pu setxy 1150 250 pd
+setpc 3
+
+for [i 100 10 -5] [
+    repeat 6 [
+        repeat 6 [
+            fd :i 
+            lt 60
+        ] 
+    lt 60
+    ]
+]
+
+pu setxy 250 700 pd
+setpc 4
+
+repeat 5 [
+    repeat 6 [
+        fd 100 
+        lt 72
+    ] 
+    lt 144
+]
+
+pu setxy 700 700 pd
+setpc 5
+
+for [i 100 10 -5] [
+    repeat 5 [
+        repeat 6 [
+            fd :i 
+            lt 72
+        ] 
+    lt 144
+    ]
+]
+
+pu setxy 1150 680 pd
+setpc 6
+
+for [i 100 10 -10] [
+    repeat 5 [
+        repeat 5 [
+            fd :i 
+            lt 72
+        ] 
+    lt 72
+    ]
+]

@@ -1,0 +1,53 @@
+canvassize 1400 1400
+backcolor 7
+
+To TRIANGULO2 :a [:b 5] [:c 5] [:d 5]
+  setpc :b
+  localmake "a 100
+  fd :a
+  rt 360 / 3
+  setpc :c
+  fd :a
+  rt 360 / 3
+  setpc :d
+  fd :a
+End
+
+
+TO SPIRAL :SIZE
+ IFELSE (:SiZe > 100) [skip]
+     [RT 90
+      FD :SIZE 
+      call SPIRAL :SIZE + 10]
+END
+
+to square
+    repeat 4 [
+    forward 100 
+    right 90
+    ]
+end
+
+
+
+to flower
+    repeat 36 [
+        right 20 
+        call square
+        ]
+end
+
+pu
+setxy 300 300
+pd
+call flower
+
+pu
+setxy 600 300
+pd
+call spiral 10
+
+
+pu home pd
+
+call triangulo2 100 1 2 3

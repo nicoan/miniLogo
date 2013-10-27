@@ -1,0 +1,13 @@
+canvassize 1000 1000
+backcolor 7
+
+
+repeat 100 [
+  repeat repcount [
+    repeat repcount [
+      fd repcount lt 15
+    ] 
+    home
+  ] 
+  lt 1
+]

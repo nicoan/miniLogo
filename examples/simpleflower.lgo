@@ -1,0 +1,8 @@
+canvassize 500 500
+backcolor 7
+
+repeat 11 [
+  for [i 0 359] [
+    fd 1 rt (sin :i / 2)
+  ]
+]

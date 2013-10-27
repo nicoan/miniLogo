@@ -1,0 +1,11 @@
+canvassize 500 500
+backcolor 7
+
+pu
+setx 70
+pd
+
+for [i 0 4700] [
+  fd 10
+  rt (180 * sin (:i * :i))
+]

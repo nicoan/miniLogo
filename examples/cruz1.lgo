@@ -1,0 +1,16 @@
+canvassize 500 500
+backcolor 7
+
+setpc 1
+rt 90
+
+for [i 0 420] [
+  seth :i 
+  repeat :i [
+    fd 2 
+    rt 1
+  ] 
+  pu 
+  home 
+  pd
+]

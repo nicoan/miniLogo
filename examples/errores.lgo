@@ -1,0 +1,38 @@
+/*
+Archivo para el testeo de errores
+*/
+
+canvasSize 500 500
+backColor 1
+
+;Moverse fuera de la imagen
+;setxy 501 501
+
+;Repeat con numero de repeticiones ilegal
+
+;repeat .5 [ fd 50 rt 20 ]
+;repeat -5 [ fd 50 rt 20 ]
+
+
+;Division por cero
+
+;make "x 2 / 0
+
+;Checkeo de tipos
+
+/*
+make "y true
+make "w 1
+
+make "z AND :w :y
+make "z :w + :y*/
+
+;Argumentos en llamado a metodos 
+
+to metodo :a :b
+  fd :a
+  rt :b
+end
+
+;call metodo
+call metodo 50

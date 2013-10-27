@@ -1,0 +1,12 @@
+canvassize 500 500
+backcolor 7
+
+pu
+setxy 100 100
+pd
+
+
+for [i 0 2000] [
+  fd 5 
+  rt (90 * sin :i)
+]

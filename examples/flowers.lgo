@@ -1,0 +1,103 @@
+canvasSize 2100 400
+backcolor 0
+
+
+pu setxy 70 250 pd
+setpc 7
+
+repeat 8 [
+    rt 45 
+    repeat 1 [
+        repeat 90 [
+            fd 2 
+            rt 2
+        ] 
+    rt 90
+    ]
+]
+
+
+pu setxy 435 220 pd
+setpc 8
+
+repeat 8 [
+    rt 45 
+    repeat 2 [
+        repeat 90 [
+            fd 2 
+            rt 2
+        ] 
+    rt 90
+    ]
+]
+
+pu setxy 735 210 pd
+setpc 9
+
+repeat 8 [
+    rt 45 
+    repeat 3 [
+        repeat 90 [
+            fd 2 
+            rt 2
+        ] 
+    rt 90
+    ]
+]
+
+
+pu setxy 1085 180 pd
+setpc 10
+
+repeat 8 [
+    rt 45 
+    repeat 4 [
+        repeat 90 [
+            fd 2 
+            rt 2
+        ] 
+    rt 90
+    ]
+]
+
+pu setxy 1285 240 pd
+setpc 11
+
+repeat 8 [
+    rt 45 
+    repeat 5 [
+        repeat 90 [
+            fd 2 
+            rt 2
+        ] 
+    rt 90
+    ]
+]
+
+pu setxy 1635 210 pd
+setpc 12
+
+repeat 8 [
+    rt 45 
+    repeat 6 [
+        repeat 90 [
+            fd 2 
+            rt 2
+        ] 
+    rt 90
+    ]
+]
+
+pu setxy 1900 210 pd
+setpc 13
+
+repeat 8 [
+    rt 45 
+    repeat 7 [
+        repeat 90 [
+            fd 2 
+            rt 2
+        ] 
+    rt 90
+    ]
+]
