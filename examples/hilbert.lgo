@@ -1,0 +1,44 @@
+canvassize 1400 1400
+backcolor 7
+
+
+TO Hi :n [:h 10]
+  IFELSE :n = 0 [ skip ]
+    [RT 90
+     call Ih :n - 1
+     FD :h 
+     LT 90
+     call Hi :n - 1
+     FD :h
+     call Hi :n - 1
+     LT 90
+     FD :h
+     call Ih :n - 1
+     RT 90]
+END
+
+
+TO Ih :n [:h 10]
+  IFELSE :n = 0 [ skip ]
+    [LT 90 
+     call Hi :n - 1
+     FD :h 
+     RT 90
+     call Ih :n - 1
+     FD :h
+     call Ih :n - 1
+     RT 90
+     FD :h
+     call Hi :n - 1
+     LT 90]
+END
+
+pu
+setxy 50 1300
+pd
+
+call hi 7
+
+
+pu home pd
+

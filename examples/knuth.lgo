@@ -1,0 +1,26 @@
+canvassize 1400 1400
+backcolor 7
+
+
+TO Sierp :n :a :h :k
+  IFELSE :n = 0 [FD :k
+                 skip ] 
+                [RT :a 
+                 call Sierp (:n - 1) (- :a) :h :k 
+                 LT :a
+                 FD :h
+                 LT :a
+                 call Sierp (:n - 1) (- :a) :h :k
+                 RT :a]
+END
+
+pu
+setxy 40 1350
+PD MAKE "h 12/sqrt 2 
+SETPC [200 000 200]
+REPEAT 4 [ 
+     call Sierp 11 45 :h 10 
+     RT 45 
+     FD :h 
+     RT 45 ]
+

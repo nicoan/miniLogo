@@ -1,0 +1,35 @@
+canvassize 1400 1400
+backcolor 7
+
+
+TO TWO :a :c :w
+  IFELSE :c < 1 [ skip ] 
+                [RT :a 
+                 FD 1 
+                 RT :a 
+                 FD :w 
+                 LT :a 
+                 IF :c > 1 [FD 1] 
+                 LT :a 
+                 FD :w 
+                 call TWO :a :c - 2 :w]
+END
+
+TO Square :a :h :w
+  FD :w 
+  call TWO :a :h - 1 :w
+END
+
+TO Cag :n :a :w :h
+  IFELSE :n = 0 [ call Square :a :h :w ] 
+                [RT :a 
+                 call Cag (:n - 1) (- :a) (:h / 4) :w
+                 FD :h/8
+                 call Cag (:n - 1) :a (:h / 4) :w 
+                 FD :h/8
+                 call Cag (:n - 1) (- :a) (:h / 4) :w
+                 LT :a]
+END
+
+
+call Cag 12 90 320 320

@@ -541,7 +541,7 @@ module Evaluation where
 
   -- Optimizacion de la funcion forward: En lugar de dibujar el camino punto a punto, traza una linea desde el inicio
   -- al fin del camino.
-  forward' :: (MonadError m, MonadState m, MonadTurtle m) => Int => Coord => m()
+  forward' :: (MonadError m, MonadState m, MonadTurtle m) => Int -> Coord -> m()
   forward' 0 xy = do c <- getColor
                      drawLine'' xy c
                      return ()
