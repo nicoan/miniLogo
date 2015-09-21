@@ -1,0 +1,5 @@
+canvassize 3000 3000
+backcolor 7
+
+home
+repeat 36000 [setxy (sqrt repcount) * sin repcount (sqrt repcount) * cos repcount]

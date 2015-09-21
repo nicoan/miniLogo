@@ -1,0 +1,31 @@
+canvassize 500 500
+backcolor 7
+
+
+to koch :length :iterations 
+	ifelse :iterations=1 
+	   [forward :length] 
+	   [call koch :length :iterations-1 
+	    left 60 
+	    call koch :length :iterations-1 
+	    right 120 
+	    call koch :length :iterations-1 
+	    left 60 
+	    call koch :length :iterations-1] 
+end
+
+to kochsnowflake :length :iterations 
+	left 120 
+	call koch :length :iterations 
+	right 120 
+	call koch :length :iterations 
+	right 120 
+	call koch :length :iterations 
+end
+
+pu
+setxy 480 250
+pd
+call kochsnowflake 5 5
+
+
