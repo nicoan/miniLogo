@@ -14,6 +14,8 @@ module Evaluation where
   import AST
   import Parser
   import Data.Char
+  import Control.Applicative (Applicative)
+  import Control.Monad (liftM, ap)
 
   -- Definimos el entorno
   type Env = [(Variable, Val)]
@@ -25,12 +27,12 @@ module Evaluation where
   initEnv = []
 
   -- Definimos el entorno de funciones
-  type EnvF = [Function]  
+  type EnvF = [Function]
 
   initEnvF :: EnvF
   initEnvF = []
-  
-  
+
+
   -- El tipo TurtleThings es una tupla con toda la informacion necesaria para el dibujo
   -- La misma contiene:
   --  Posicion de donde se encuentra la tortuga
@@ -52,13 +54,13 @@ module Evaluation where
 
   -- Monada de estado con soporte de errores
   -- Env : Entorno de variables globales
-  -- EnvF : Entorno de funciones definidas por el usuario 
-  -- TutleThings : Parametros que necesito para ir construyendo la imagen 
+  -- EnvF : Entorno de funciones definidas por el usuario
+  -- TutleThings : Parametros que necesito para ir construyendo la imagen
   -- InitImg : Descripcion imagen que vamos construyendo a medida que vamos ejecutando el codigo
   -- Env : Lista para debugguar
-  newtype State a = State { runState :: Env -> 
-                                        EnvF -> 
-                                        TurtleThings -> 
+  newtype State a = State { runState :: Env ->
+                                        EnvF ->
+                                        TurtleThings ->
                                         [ImgDesc] -> Env -> Either Error (a, Env, EnvF, TurtleThings, [ImgDesc], Env) }
 
 
@@ -66,6 +68,16 @@ module Evaluation where
   -- ================================================
   --  Definicion de clases necesarias para la monada
   -- ================================================
+
+
+
+  instance Functor State where
+    fmap = liftM
+
+  instance Applicative State where
+    pure  = return
+    (<*>) = ap
+
 
   -- Monada con soporte de errores
 
@@ -120,13 +132,13 @@ module Evaluation where
 
   instance Monad State where
     return x = State (\s sf tt img db -> Right (x, s, sf, tt, img, db))
-    m >>= f = State (\s sf tt img db -> let st = runState m s sf tt img db 
+    m >>= f = State (\s sf tt img db -> let st = runState m s sf tt img db
                                         in case st of
                                              Left e -> Left e
                                              Right (y, s', sf', tt', img', db') -> runState (f y) s' sf' tt' img' db')
 
 
-  instance MonadError State where 
+  instance MonadError State where
     throw e = State (\s sf tt img db -> Left e)
 
   instance MonadState State where
@@ -135,13 +147,13 @@ module Evaluation where
                                                                                    else (var', v) : updateEnv var nv xs
                                              in Right ((), updateEnv var v s, sf, tt, img, db) )
     lookfor var = State (\s sf tt img db -> let look var [] _ _ _ _ _ = Left $ "La variable " ++ var ++ " no esta definida" --(2)
-                                                look var ((var', v):xs) s sf tt img db = if ((lowerCase var) == (lowerCase var')) then Right (v, s, sf, tt, img, db) 
+                                                look var ((var', v):xs) s sf tt img db = if ((lowerCase var) == (lowerCase var')) then Right (v, s, sf, tt, img, db)
                                                                                       else look var xs s sf tt img db
                                             in look var s s sf tt img db)
     updateDB var v = State (\s sf tt img db -> Right ((), s, sf, tt, img, ((var,v):db)) )
-  
+
     lookforF name = State (\s sf tt img db -> let look name [] _ _ _ _ _ = Left $ "El metodo " ++ name ++ " no esta definido." --(2)
-                                                  look name ((name', a, a', c):fs) s sf tt img db = if ((lowerCase name') == (lowerCase name)) then Right ((name', a, a', c), s, sf, tt, img, db) 
+                                                  look name ((name', a, a', c):fs) s sf tt img db = if ((lowerCase name') == (lowerCase name)) then Right ((name', a, a', c), s, sf, tt, img, db)
                                                                                                     else look name fs s sf tt img db
                                               in look name sf s sf tt img db)
     updateF (nom, a, a', c) = State (\s sf tt img db -> let lookupF nom [] = False
@@ -152,7 +164,7 @@ module Evaluation where
                                                            else Right ((), s, (nom, a, a', c):sf, tt, img, db) )
 
   -- (2) A la funcion look le pasamos el entorno entero como argumento para poder devolver directamente Right (v, s)
-                                                           
+
   instance MonadTurtle State where
     setPos xy = State (\s sf tt img db -> let (cord, ang, col, size, pen, bg) = tt
                                           in Right ((), s, sf, (xy, ang, col, size, pen, bg), img, db) )
@@ -165,21 +177,21 @@ module Evaluation where
     getPenState = State (\s sf tt img db -> let (cord, ang, col, size, pen, bg) = tt
                                             in Right (pen, s, sf, tt, img, db) )
     setCanvasSize n m = State (\s sf tt img db -> let (cord, ang, col, size, pen, bg) = tt
-                                                  in Right ((), s, sf, (cord, ang, col, (n, m), pen, bg), img, db)) 
+                                                  in Right ((), s, sf, (cord, ang, col, (n, m), pen, bg), img, db))
     getCanvasSize = State (\s sf tt img db -> let (cord, ang, col, size, pen, bg) = tt
-                                              in Right (size, s, sf, (cord, ang, col, size, pen, bg), img, db) )  
+                                              in Right (size, s, sf, (cord, ang, col, size, pen, bg), img, db) )
     setColor c = State (\s sf tt img db -> let (cord, ang, col, size, pen, bg) = tt
-                                           in Right ((), s, sf, (cord, ang, c, size, pen, bg), img, db) )  
+                                           in Right ((), s, sf, (cord, ang, c, size, pen, bg), img, db) )
     getColor = State (\s sf tt img db -> let (cord, ang, col, size, pen, bg) = tt
-                                         in Right (col, s, sf, tt, img, db) )  
+                                         in Right (col, s, sf, tt, img, db) )
     setBackColor c = State (\s sf tt img db -> let (cord, ang, col, size, pen, bg) = tt
-                                               in Right ((), s, sf, (cord, ang, col, size, pen, c), img, db) )  
+                                               in Right ((), s, sf, (cord, ang, col, size, pen, c), img, db) )
     setAngle a = State (\s sf tt img db -> let (cord, ang, col, size, pen, bg) = tt
-                                           in Right ((), s, sf, (cord, a, col, size, pen, bg), img, db) )  
+                                           in Right ((), s, sf, (cord, a, col, size, pen, bg), img, db) )
     getAngle = State (\s sf tt img db -> let (cord, ang, col, size, pen, bg) = tt
-                                         in Right (ang, s, sf, tt, img, db) )  
+                                         in Right (ang, s, sf, tt, img, db) )
     updateImg pix = State (\s sf tt img db -> Right ((), s, sf, tt, pix:img, db) )
- 
+
   -- Auxiliares
 
   lowerCase :: String -> String
@@ -202,18 +214,18 @@ module Evaluation where
 
 
   -- Evaluador de comandos
-  
+
 
   evalCommList :: (MonadError m, MonadState m, MonadTurtle m) => [Comm] -> Env -> m Env
   evalCommList [] localEnv = return localEnv
   evalCommList ((LocalMake var e):cs) localEnv = do val <- evalExp e localEnv
-                                                    evalCommList cs (updateEnv var val localEnv) 
+                                                    evalCommList cs (updateEnv var val localEnv)
   evalCommList (c:cs) localEnv = do evalComm c localEnv
                                     evalCommList cs localEnv
 
 
   {- La razon por la que evalCommList devuelve el entorno local es por situaciones como esta:
-     
+
      to test
         localmake "i 0
         while (:i < 10) [
@@ -230,7 +242,7 @@ module Evaluation where
 
 
   -- La lista que le pasamos a como argumento es para los comandos que contienen variables locales
-  -- asi hacemos que primero se fijen en las variables locales y luego en las globales 
+  -- asi hacemos que primero se fijen en las variables locales y luego en las globales
 
   evalComm :: (MonadError m, MonadState m, MonadTurtle m) => Comm -> Env -> m ()
   evalComm Skip _ = return ()
@@ -241,22 +253,22 @@ module Evaluation where
                                      xy <- getPos
                                      --forward (round n)
                                      forward' (round n) xy
-  evalComm (Backward e) localEnv = do VN n <- evalNumExp e localEnv 
+  evalComm (Backward e) localEnv = do VN n <- evalNumExp e localEnv
                                       backward (round n)
   evalComm (LeftAng e) localEnv = do VN n <- evalNumExp e localEnv
                                      goLeft n
-  evalComm (RightAng e )localEnv = do VN n <- evalNumExp e localEnv 
+  evalComm (RightAng e )localEnv = do VN n <- evalNumExp e localEnv
                                       goRight n
   evalComm (SetPos e e') localEnv = let errmsg = "Runtime error, se intenta mover fuera de los limites del tamaño de la imagen."
                                      in do VN x <- evalNumExp e localEnv
-                                           VN y <- evalNumExp e' localEnv 
+                                           VN y <- evalNumExp e' localEnv
                                            (maxx, maxy) <- getCanvasSize
                                            c <- getColor
                                            if (x > (fromIntegral maxx) || x < 0) then  throw errmsg
                                            else if (y > (fromIntegral maxy) || y < 0) then throw errmsg
                                            else drawLine' (x, y) c
 
-  evalComm (SetPosX e) localEnv = do VN x <- evalNumExp e localEnv 
+  evalComm (SetPosX e) localEnv = do VN x <- evalNumExp e localEnv
                                      (_ , y) <- getPos
                                      evalComm (SetPos (Const x) (Const y)) []
   evalComm (SetPosY e) localEnv = do VN y <- evalNumExp e localEnv
@@ -277,17 +289,17 @@ module Evaluation where
                                            repeat' n c rc ne = do newLocalEnv <- evalCommList c (updateEnv "repcount" (VN rc) ne)
                                                                   repeat' (n - 1) c (rc + 1) newLocalEnv
                                            errmsg = "Runtime error, repeat: el numero de repeticiones debe ser entero positivo."
-                                       in do VN n <- evalNumExp e localEnv 
+                                       in do VN n <- evalNumExp e localEnv
                                              case (properFraction n) of
                                                   (n', 0.0) -> if (n' >= 0) then repeat' n' coms 0 (("repcount",VN 0.0):localEnv)
                                                                else throw errmsg
                                                   _ -> throw errmsg
-  evalComm (Cond b c c') localEnv = do VB tf <- evalBoolExp b localEnv 
+  evalComm (Cond b c c') localEnv = do VB tf <- evalBoolExp b localEnv
                                        if tf then do evalCommList c localEnv
                                                      return ()
                                        else do evalCommList c' localEnv
                                                return ()
-  evalComm (For (v,s) e j coms) localEnv = do VN s <- evalNumExp s localEnv 
+  evalComm (For (v,s) e j coms) localEnv = do VN s <- evalNumExp s localEnv
                                               VN e <- evalNumExp e localEnv
                                               VN j <- evalNumExp j localEnv
                                               if (j == 0.0) then if (s <= e) then evalFor v s e (1.0) coms localEnv
@@ -344,9 +356,9 @@ module Evaluation where
 
   -- Reemplazamos los valores de los argumentos opcionales
   newArgOp :: (MonadError m, MonadState m, MonadTurtle m) => [Val] -> [(Variable, Val)] -> [(Variable, Val)] -> m [(Variable, Val)]
-  newArgOp [] vals newvals = return $ newvals ++ vals 
+  newArgOp [] vals newvals = return $ newvals ++ vals
   newArgOp (newval:xs) ((var, val):vals) newvals = do newArgOp  xs vals ((var, newval) : newvals)
- 
+
   splitAt' :: (MonadError m, MonadState m, MonadTurtle m) => Int -> [a] -> m ([a], [a])
   splitAt' n xs = return (splitAt n xs)
 
@@ -356,23 +368,23 @@ module Evaluation where
 
 
   evalFor :: (MonadError m, MonadState m, MonadTurtle m) => Variable -> Double -> Double -> Double -> [Comm] ->  Env -> m ()
-  evalFor v s e j c localEnv = if (j < 0) then if (s <= e) then return ()  
+  evalFor v s e j c localEnv = if (j < 0) then if (s <= e) then return ()
                                                else do newLocalEnv <- evalCommList c (updateEnv v (VN s) localEnv)
                                                        evalFor v (s + j) e j c newLocalEnv
-                               else if (s >= e) then return ()  
+                               else if (s >= e) then return ()
                                                else do newLocalEnv <- evalCommList c (updateEnv v (VN s) localEnv)
                                                        evalFor v (s + j) e j c newLocalEnv
 
 
   -- Evaluador de expresiones numericas
-  
-  
+
+
   -- La lista que le pasamos a como argumento es para los comandos que contienen variables locales
-  -- asi hacemos que primero se fijen en las variables locales y luego en las globales 
+  -- asi hacemos que primero se fijen en las variables locales y luego en las globales
 
   evalNumExp :: (MonadError m, MonadState m, MonadTurtle m) => NumExp -> Env -> m Val
   evalNumExp (Const n) _ = return (VN n)
-  evalNumExp (Var x) localEnv =  case lookup (lowerCase x) localEnv of 
+  evalNumExp (Var x) localEnv =  case lookup (lowerCase x) localEnv of
                                     Just (VN n) -> return (VN n)
                                     Just (VB b) -> return (VB b)
                                     _ -> lookfor x
@@ -388,11 +400,11 @@ module Evaluation where
                                                   else either throw return (operateNumValBin (/) x y)
                                           _ -> throw "Runtime error, se estan intentando operar dos cosas de distinto tipo"
 
-  operateNumValBin :: (Double -> Double -> Double) -> Val -> Val -> Either Error Val 
+  operateNumValBin :: (Double -> Double -> Double) -> Val -> Val -> Either Error Val
   operateNumValBin f (VN n) (VN m) = Right (VN (f n m))
   operateNumValBin f _ _ = Left $ "Runtime error, se estan intentando operar dos cosas de distinto tipo."
 
-  operateNumValU :: (Double -> Double) -> Val -> Either Error Val 
+  operateNumValU :: (Double -> Double) -> Val -> Either Error Val
   operateNumValU f (VN n) = Right (VN (f n))
   operateNumValU f _ = Left $ "Runtime error, se estan intentando operar dos cosas de distinto tipo."
 
@@ -400,7 +412,7 @@ module Evaluation where
 
   evalBoolExp :: (MonadError m, MonadState m, MonadTurtle m) => BoolExp -> Env -> m Val
   evalBoolExp (C b) _ = return (VB b)
-  evalBoolExp (VarB v) localEnv = case lookup (lowerCase v) localEnv of 
+  evalBoolExp (VarB v) localEnv = case lookup (lowerCase v) localEnv of
                                     Just (VN n) -> return (VN n)
                                     Just (VB b) -> return (VB b)
                                     _ -> lookfor v
@@ -411,16 +423,16 @@ module Evaluation where
                                             y <- evalBoolExp e' localEnv
                                             either throw return (operateBoolBVal f x y)
   evalBoolExp (Not e) localEnv = do x <- evalBoolExp e localEnv
-                                    case x of 
+                                    case x of
                                        VB y -> return (VB (not y))
                                        _ -> throw "Runtime error, se estan intentando operar dos cosas de distinto tipo."
- 
 
-  operateBoolNVal :: (Double -> Double -> Bool) -> Val -> Val -> Either Error Val 
+
+  operateBoolNVal :: (Double -> Double -> Bool) -> Val -> Val -> Either Error Val
   operateBoolNVal f (VN n) (VN m) = Right (VB (f n m))
   operateBoolNVal f _ _ = Left $ "Runtime error, se estan intentando operar dos cosas de distinto tipo."
 
-  operateBoolBVal :: (Bool -> Bool -> Bool) -> Val -> Val -> Either Error Val 
+  operateBoolBVal :: (Bool -> Bool -> Bool) -> Val -> Val -> Either Error Val
   operateBoolBVal f (VB p) (VB q) = Right (VB (f p q))
   operateBoolBVal f _ _ = Left $ "Runtime error, se estan intentando operar dos cosas de distinto tipo."
 
@@ -432,8 +444,8 @@ module Evaluation where
 
 
   -- Comandos para manejar la grafica
-  
-  -- Evaluador de colores 
+
+  -- Evaluador de colores
   evalColor :: (MonadError m, MonadState m, MonadTurtle m) => Either Colors NumExp -> Env -> m Color
   evalColor (Left Black) _ = return (rgb 0 0 0)
   evalColor (Left Blue) _ = return (rgb 0 0 255 )
@@ -463,7 +475,7 @@ module Evaluation where
                                           6 -> return (rgb 255 255 0)
                                           7 -> return (rgb 255 255 255)
                                           8 -> return (rgb 165 42 42)
-                                          9 -> return (rgb 210 180 140)   
+                                          9 -> return (rgb 210 180 140)
                                           10 -> return (rgb 0 100 0)
                                           11 -> return (rgb 127 255 212)
                                           12 -> return (rgb 250 128 114)
@@ -498,7 +510,7 @@ module Evaluation where
   goLeft :: (MonadError m, MonadState m, MonadTurtle m) => Double -> m ()
   goLeft n = do a <- getAngle
                 setAngle (rotate n a)
-  
+
   goRight :: (MonadError m, MonadState m, MonadTurtle m) => Double -> m ()
   goRight n = do a <- getAngle
                  setAngle (rotate (- n) a)
@@ -550,7 +562,7 @@ module Evaluation where
                      wz <- nextDot a ab
                      setPos wz
                      forward' (n - 1) xy
-                    
+
 
 
   -- Funcion que nos calcula hacia que direccion ira el siguiente punto
@@ -571,7 +583,7 @@ module Evaluation where
   -- x -> Cuanto rotar
   -- a -> Angulo a rotar
   rotate :: Double -> Double -> Double
-  rotate x a = if (n > 360.0) then resta360 n 
+  rotate x a = if (n > 360.0) then resta360 n
                else if (n < -360.0) then suma360 n
                else n
                     where n = x + a
