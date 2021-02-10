@@ -1,64 +1,59 @@
 module Main where
 
 import System.Environment (getArgs)
-import Parser 
-import Text.ParserCombinators.Parsec (many,eof,Parser,parse)
+import Text.ParserCombinators.Parsec (Parser, many, eof, parse)
 import Text.ParserCombinators.Parsec.Token (whiteSpace)
-import Graphics.GD
+import Control.Monad.Except (ExceptT, runExceptT, liftIO, throwError)
+import Graphics.GD (Image, Color, drawLine, savePngFile, fillImage, newImage)
+import Parser (parseLogoDoc, logoTokens)
+import Evaluation (CompiledImage (..), eval)
 import AST
-import Evaluation
----------------------------------------------------------
+
+type LogoCompilerMonad = ExceptT String IO
 
 main :: IO ()
 main = do args <- getArgs
-          if (length args > 2) then putStrLn "Error, el numero de argumentos es muy grande." >> modoDeUso
-          else if (length args < 2) then putStrLn "Error, faltan argumentos." >> modoDeUso
-          else run (args!!0) (args!!1)
+          if (length args > 2) then putStrLn "Error. Too few arguments." >> usage
+          else if (length args < 2) then putStrLn "Error. Too many arguments." >> usage
+          else do res <- runExceptT $ run (args!!0) (args!!1)
+                  case res of
+                    Left err -> putStrLn err
+                    Right _ -> return ()
 
-parseIO :: Parser a -> String -> IO (Maybe a)
-parseIO p x = case parse (whiteSpace logoTokens >> p >>= \y -> eof >> return y) "" x of
-                  Left e -> putStrLn (show e) >> return Nothing
-                  Right r -> return (Just r)
+
+parseLogoSource :: Parser a -> String -> LogoCompilerMonad a
+parseLogoSource p x = either (throwError . show) return (parse (whiteSpace logoTokens >> p >>= \y -> eof >> return y) "" x)
 
 
 -- Ejecuta un programa a partir de su archivo fuente
-run :: [Char] -> [Char] -> IO ()
-run ifile ofile= do s <- readFile ifile
-                    ast <- parseIO parseLogoDoc s
-                    case ast of
-                        Nothing -> return ()
-                        Just r -> case eval r of
-                                    Left e -> putStrLn e
-                                    Right (i, (_, _, _, size, _, bg)) -> do makeImg i size bg ofile
-                                                                            putStrLn "Compilación realizada con exito."
-
-printList :: (Show a) => [a] -> IO ()
-printList [] = return ()
-printList (x:xs) = do putStrLn $ show x
-                      printList xs
-
-makeImg :: [ImgDesc] -> (Int, Int) -> Color -> [Char] -> IO ()
-makeImg img size color ofile = do pic <- newImage size
-                                  fillImage color pic
-                                  makeImg' img pic
-                                  --printList img
-                                  savePngFile (ofile ++ ".png") pic
+run :: String -> String -> LogoCompilerMonad ()
+run ifile ofile= do input <- liftIO $ readFile ifile
+                    ast <- parseLogoSource parseLogoDoc input
+                    compiledImage <- either throwError return (eval ast)
+                    do let size = cSize compiledImage
+                       let backgroundColor = cBackgroundColor compiledImage
+                       let imageDescription = cDescription compiledImage
+                       makeImg imageDescription size backgroundColor ofile
 
 
-modoDeUso :: IO ()
-modoDeUso = do putStrLn "\nModo de uso:\n"
-               putStrLn "./Main <infile> <outfile>"
-               putStrLn "<infile>  : Archivo que contiene el codigo de fuente de entrada."
-               putStrLn "<outfile> : Nombre del archivo de salida (se agregara automaticamente la extension png)"
-                                  
-makeImg' :: [ImgDesc] -> Image -> IO ()
-makeImg' [] _ = return ()
-makeImg' ((Ip ((x,y),c):xs)) p = do drawDotGD (x,y) c p
-                                    makeImg' xs p
-makeImg' ((Il (x,y) (w, z) c):xs) p = do drawLine (x, y) (w, z) c p
-                                         makeImg' xs p
+makeImg :: ImageDescription -> ImageSize -> Color -> String -> LogoCompilerMonad ()
+makeImg img size color ofile = do pic <- liftIO $ newImage size
+                                  liftIO $ fillImage color pic
+                                  drawLines img pic
+                                  liftIO $ savePngFile (ofile ++ ".png") pic
 
 
-drawDotGD ::(Int, Int) -> Color -> Image -> IO ()
-drawDotGD (x, y) c i = drawLine (x, y) (x, y) c i
+usage :: IO ()
+usage = do putStrLn "Usage:\n"
+           putStrLn "./minilogo <infile> <outfile>"
+           putStrLn "<infile>  : path to the source."
+           putStrLn "<outfile> : output file (appends automatically .png extension)"
 
+
+drawLines :: ImageDescription -> Image -> LogoCompilerMonad ()
+drawLines [] _ = return ()
+drawLines (imageLine:xs) picture = do let start = startPosition imageLine
+                                      let end = endPosition imageLine
+                                      let color = lineColor imageLine
+                                      liftIO $ drawLine start end color picture
+                                      drawLines xs picture

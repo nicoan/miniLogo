@@ -7,7 +7,7 @@
 -- Este archivo contiene el parser del lenguaje
 -- ==========================================================================================
 
-module Parser(P.parse, logoTokens, parseLogoDoc) where
+module Parser (P.parse, logoTokens, parseLogoDoc) where
 
   import Text.ParserCombinators.Parsec.Language
   import Text.ParserCombinators.Parsec hiding (parse)
@@ -44,12 +44,12 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                                    "setpc", "setpencolor", "pendown", "penup", "pd", "pu",
                                    "black", "blue", "green", "cyan", "red", "magenta", "yellow",       -- Colores
                                    "white", "brown", "tan", "forest", "aqua", "salmon", "purple",
-                                   "orange", "grey"] 
+                                   "orange", "grey"]
               , caseSensitive  = False
                }
 
 
-  logoTokens = makeTokenParser logoStyle 
+  logoTokens = makeTokenParser logoStyle
 
   identifier' = identifier logoTokens
   reserved' = reserved logoTokens
@@ -99,8 +99,8 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
 
 
   decimals :: Integer -> Double
-  decimals n = (fromIntegral n) / n' 
-                where n' = 10^(length (show n)) 
+  decimals n = (fromIntegral n) / n'
+                where n' = 10^(length (show n))
 
   -- Parser para nombres de procedimientos
   procName :: Parser String
@@ -108,7 +108,7 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                 x <- many1 alphaNum
                 whiteSpace'
                 return x
- 
+
 
   -- ===================================
   --  Parseamos expresiones aritmeticas
@@ -118,13 +118,13 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
   factor = do reservedOp' "-"
               x <- term
               return (UnOp uMin x)
-              <|> 
+              <|>
               do x <- parseNum
                  return (Const x)
                 <|>
-                do v <- parseVar 
+                do v <- parseVar
                    return (Var v)
-                   <|> 
+                   <|>
                    do e <- parens' parseNumExp
                       return e
 
@@ -155,16 +155,16 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
  -- Dependiendo de la palabra reservada, devolvemos la funcion correspondiente.
   unaryOperationsF :: Parser (Double -> Double)
   unaryOperationsF = do op <- reserved' "minus"
-                        return uMin 
+                        return uMin
                      <|>
-                     do op <- reserved' "int" 
+                     do op <- reserved' "int"
                         return (fromIntegral . floor)
                      <|>
-                     do op <- reserved' "round" 
+                     do op <- reserved' "round"
                         return (fromIntegral . round)
                      <|>
                      do op <- reserved' "sqrt"
-                        return sqrt 
+                        return sqrt
                      <|>
                      do op <- reserved' "exp"
                         return exp
@@ -188,7 +188,7 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                         return cos
                      <|>
                      do op <- reserved' "arctan"
-                        return (atan . toRadian) 
+                        return (atan . toRadian)
                      <|>
                      do op <- reserved' "radactan"
                         return atan
@@ -196,7 +196,7 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
 
   unaryOperations :: Parser NumExp
   unaryOperations = do f <- unaryOperationsF
-                       e <- term 
+                       e <- term
                        return (UnOp f e)
 
   -- Funciones Unarias para flotantes
@@ -222,9 +222,9 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                         return (VarB v)
 
 
-  {- Los terminos booleanos son los que terminos que estan separados por &&, ||. Dichos terminos tiene operaciones de 
+  {- Los terminos booleanos son los que terminos que estan separados por &&, ||. Dichos terminos tiene operaciones de
      comparacion e igualdad entre numeros -}
- 
+
   {-(2)  el problema es que parsenumexp consume variables, entonces hay conflicto cuando quiere parsear las variables
     booleanas, por eso el try en infixPar -}
 
@@ -232,16 +232,16 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
   boolTerm :: Parser BoolExp
   boolTerm = let prefixPar =  do  op <- boolTermF
                                   e  <- parseNumExp
-                                  e' <- parseNumExp 
+                                  e' <- parseNumExp
                                   return (BinOpN op e e')
                  infixPar =  do e  <- parseNumExp
                                 op <- boolTermF'
-                                e' <- parseNumExp 
+                                e' <- parseNumExp
                                 return (BinOpN op e e')
                  boolC = do t <- boolConsts
                             return t
-             in prefixPar <|> try parensOrBrackets <|> try infixPar <|> boolC  -- (1) (2)                 
-                 
+             in prefixPar <|> try parensOrBrackets <|> try infixPar <|> boolC  -- (1) (2)
+
   parensOrBrackets :: Parser BoolExp
   parensOrBrackets = do e <- brackets' parseBoolExp
                         return e
@@ -285,9 +285,9 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
               <|>
               do reserved' "equal?"
                  return (==)
-              
-  -- Para operadores 
-  
+
+  -- Para operadores
+
   boolTermF' :: Parser (Double -> Double -> Bool)
   boolTermF' = do reservedOp' "<"
                   return (<)
@@ -300,7 +300,7 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                <|>
                do reservedOp' ">"
                   return (>=)
-               <|>    
+               <|>
                do reservedOp' ">"
                   return (>)
 
@@ -309,7 +309,7 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
   parseBoolExp :: Parser BoolExp
   parseBoolExp = do t <- boolTerm
                     return t
-                    <|> 
+                    <|>
                     do reserved' "and"
                        t <- boolTerm
                        e <- parseBoolExp
@@ -324,7 +324,7 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                              e <- parseBoolExp
                              return (Not e)
 
-  
+
   -- ========================
   --    Parser de comandos
   -- ========================
@@ -335,14 +335,14 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
   -- La combinacion de los dos
 
   -- General
-  parseComm' :: Parser Comm
-  parseComm' = do x <- reserved' "skip" 
+  parseComm' :: Parser Statement
+  parseComm' = do x <- reserved' "skip"
                   return (Skip)
                <|>
                do reserved' "make"
                   x <- parseWord
                   y <- parseExp
-                  return (Make x y) 
+                  return (Make x y)
                <|>
                do reserved' "forward"                  -- Comandos de dibujos
                   n <- parseNumExp
@@ -395,7 +395,7 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                <|>
                do reserved' "seth"
                   a <- parseNumExp
-                  return (SetHead a) 
+                  return (SetHead a)
                <|>
                do reserved' "pendown"
                   return (PenDown)
@@ -407,7 +407,7 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                   return (PenUp)
                <|>
                do reserved' "pu"
-                  return (PenUp) 
+                  return (PenUp)
                <|>
                do reserved' "setpencolor"
                   color <- parseColor
@@ -423,28 +423,28 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                parseProcs
               <|> -- Este es el parser para las llamadas a funciones
                parseCall
-   
+
   -- Afuera de los metodos (sin declaracion de variables locales)
-  parseCommOut :: Parser Comm
+  parseCommOut :: Parser Statement
   parseCommOut = parseComm'
                  <|>
                  do reserved' "repeat"
                     n <- parseNumExp
                     coms <- brackets' parseComm
                     return (Repeat n coms)
-                 <|> 
+                 <|>
                  do reserved' "if"
                     pred <- parseBoolExp
                     coms <- brackets' parseComm
                     do coms' <- brackets' parseComm
-                       return (Cond pred coms coms')
-                       <|> return (Cond pred coms [Skip])
+                       return (If pred coms coms')
+                       <|> return (If pred coms [Skip])
                  <|>
                  do reserved' "ifelse"
                     pred <- parseBoolExp
                     coms <- brackets' parseComm
                     coms' <- brackets' parseComm
-                    return (Cond pred coms coms')
+                    return (If pred coms coms')
                  <|>
                  do reserved' "for"
                     ((v,s), e, j) <- brackets' parseForParams
@@ -472,7 +472,7 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                     return (DoUntil coms tf)
 
   -- Adentro de los metodos
-  parseCommIn' :: Parser Comm
+  parseCommIn' :: Parser Statement
   parseCommIn' = parseComm'
                  <|>
                  do reserved' "localmake"
@@ -484,19 +484,19 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                     n <- parseNumExp
                     coms <- brackets' parseCommIn
                     return (Repeat n coms)
-                 <|> 
+                 <|>
                  do reserved' "if"
                     pred <- parseBoolExp
                     coms <- brackets' parseCommIn
                     do coms' <- brackets' parseCommIn
-                       return (Cond pred coms coms')
-                       <|> return (Cond pred coms [Skip])
+                       return (If pred coms coms')
+                       <|> return (If pred coms [Skip])
                  <|>
                  do reserved' "ifelse"
                     pred <- parseBoolExp
                     coms <- brackets' parseCommIn
                     coms' <- brackets' parseCommIn
-                    return (Cond pred coms coms')
+                    return (If pred coms coms')
                  <|>
                  do reserved' "for"
                     ((v,s), e, j) <- brackets' parseForParams
@@ -523,9 +523,9 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                     tf <- parseBoolExp
                     return (DoUntil coms tf)
 
-  parseCommIn :: Parser [Comm]
+  parseCommIn :: Parser [Statement]
   parseCommIn = many1 parseCommIn'
-  
+
 
   -- Parser para los nombres de los procedimientos
   parseProcName :: Parser String
@@ -533,30 +533,30 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                      x <- many1 alphaNum
                      whiteSpace'
                      return x
-  
+
   -- ParseCall
 
-  parseCall :: Parser Comm  
+  parseCall :: Parser Statement
   parseCall =  do reserved' "call"
                   nom <- parseProcName
                   do params <- many1 parseExp
                      return (Call nom params)
                      <|> return (Call nom [])
-    
+
   -- Parser auxiliar para los parametros del for
-  
+
   parseForParams :: Parser ((Variable, NumExp), NumExp, NumExp)
   parseForParams = do varname <- identifier'
                       start <- factor
                       end <- factor
                       do jumps <- factor
                          return ((varname, start), end, jumps)
-                         <|> return ((varname, start), end, (Const 0.0)) 
+                         <|> return ((varname, start), end, (Const 0.0))
 
-  -- Ponemos 0 en los saltos porque no sabemos si es 1 o -1 
-        
-                      
- 
+  -- Ponemos 0 en los saltos porque no sabemos si es 1 o -1
+
+
+
   -- Parser de expresiones general
   parseExp :: Parser Exp
   parseExp = let numPar = do e <- parseNumExp
@@ -580,31 +580,31 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
   whatOp :: Parser String
   whatOp = do parseVar
               do x <- reservedOp' "+"
-                 return "+" 
+                 return "+"
                  <|>
                  do x <- reservedOp' "-"
-                    return "-" 
+                    return "-"
                     <|>
                     do x <- reservedOp' "*"
-                       return "*" 
+                       return "*"
                        <|>
                        do x <- reservedOp' "/"
-                          return "/" 
+                          return "/"
                           <|>
                           do x <- reservedOp' "<"
-                             return "<" 
+                             return "<"
                              <|>
                              do x <- reservedOp' "<="
-                                return "<=" 
+                                return "<="
                                 <|>
                                 do x <- reservedOp' "="
-                                   return "=" 
+                                   return "="
                                    <|>
                                    do x <- reservedOp' "=>"
-                                      return "=>" 
+                                      return "=>"
                                       <|>
                                       do x <- reservedOp' ">"
-                                         return ">" 
+                                         return ">"
 
   {- (1) Antes de probar si es una expresion booleana o una numerica, nos tenemos que fijar primero si hay un
          operador infijo. Esto lo hacemos por el siguiente motivo:
@@ -630,52 +630,52 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
                   <|>
                   do reserved' "blue"
                      return (Left Blue)
-                  <|> 
+                  <|>
                   do reserved' "green"
                      return (Left Green)
-                  <|> 
+                  <|>
                   do reserved' "cyan"
                      return (Left Cyan)
-                  <|> 
+                  <|>
                   do reserved' "red"
                      return (Left Red)
-                  <|> 
+                  <|>
                   do reserved' "magenta"
                      return (Left Magenta)
-                  <|> 
+                  <|>
                   do reserved' "yellow"
                      return (Left Yellow)
-                  <|> 
+                  <|>
                   do reserved' "white"
                      return (Left White)
-                  <|> 
+                  <|>
                   do reserved' "brown"
                      return (Left Brown)
-                  <|> 
+                  <|>
                   do reserved' "tan"
                      return (Left Tan)
-                  <|> 
+                  <|>
                   do reserved' "forest"
                      return (Left Forest)
-                  <|> 
+                  <|>
                   do reserved' "aqua"
                      return (Left Aqua)
-                  <|>      
+                  <|>
                   do reserved' "salmon"
                      return (Left Salmon)
-                  <|>      
+                  <|>
                   do reserved' "purple"
                      return (Left Purple)
-                  <|>      
+                  <|>
                   do reserved' "orange"
                      return (Left Orange)
-                  <|>      
+                  <|>
                   do reserved' "grey"
                      return (Left Grey)
-                  <|> 
+                  <|>
                   do (r,g,b) <- brackets' parseThreeCol
-                     return (Left $ Custom (rgb r g b)) 
-                  <|> 
+                     return (Left $ Custom (rgb r g b))
+                  <|>
                   do x <- parseNumExp
                      return (Right x)
 
@@ -683,27 +683,27 @@ module Parser(P.parse, logoTokens, parseLogoDoc) where
 
   -- Parser para procedimientos
 
-                     
-  parseProcs :: Parser Comm
+
+  parseProcs :: Parser Statement
   parseProcs = let parseArg = do x <- parseVar
                                  return x
                    parseOpArg = do x <- parseVar
                                    y <- parseExp
                                    return (x, y)
                in do reserved' "to"
-                     name <- procName 
+                     name <- procName
                      args <- many parseArg
                      opargs <- many $ brackets' parseOpArg
-                     coms <- parseCommIn 
+                     coms <- parseCommIn
                      reserved' "end"
                      return (To name args opargs coms)
 
-  parseComm :: Parser [Comm]
+  parseComm :: Parser [Statement]
   parseComm = many1 parseCommOut
 
   -- Parser para los documentos lgo
 
-  parseLogoDoc :: Parser [Comm]
+  parseLogoDoc :: Parser [Statement]
   parseLogoDoc = let parseSize = do reserved' "canvassize"
                                     m <- integer'
                                     n <- integer'

@@ -35,4 +35,4 @@ to metodo :a :b
 end
 
 ;call metodo
-call metodo 50
+;call metodo 50

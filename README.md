@@ -1,6 +1,42 @@
-miniLogo
-========
+# Mini Logo
 
-A little logo compiler.
-Logo is a graphic oriented educational programming language, designed in 1967 by Daniel G. Bobrow, Wally Feurzeig, Seymour Papert and Cynthia Solomon. Today the language is remembered mainly for its use of "turtle graphics", in which commands for movement and drawing produced line graphics either on screen or with a small robot called a "turtle". The language was originally conceived to enable what Papert called "body-syntonic reasoning" where students could understand (and predict and reason about) the turtle's motion by imagining what they would do if they were the turtle. There are substantial differences between the many dialects of Logo, and the situation is confused by the regular appearance of turtle graphics programs that mistakenly call themselves Logo.
-(taken from wikipedia)
+An implementation of a subset of the Berkeley Logo 6.0 language (with some tiny differences)
+
+# Installation
+
+## Dependencies
+
+- libgd-dev >= 2.2.5-5.2
+- ghc >= 8.4.4
+- cabal-install >= 2.2.0.0-2
+
+## Instructions
+
+```
+cabal update
+cabal install
+cabal build
+```
+
+# Execution
+
+Once the project is built, to compile a program you can execute:
+
+```
+cabal run <path to source> <path to output>
+```
+
+NOTE: The compiler will automatically attach the ".png" extension to the output.
+
+# Documentation
+The documentations is a little extensive, so I placed it in [another document](../main/Documentation.md)
+
+# Showcase
+
+Here are some compiled examples.
+
+![example 1](showcase/1.png)
+![example 2](showcase/2.png)
+![example 3](showcase/3.png)
+![example 4](showcase/4.png)
+![example 5](showcase/5.png)
